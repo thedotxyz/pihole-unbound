@@ -111,7 +111,8 @@ server:
 Restart the Unbound server and run the dig command to test DNS resolution. You should see the status as “NOERROR” with an IP address for the pi-hole.net server.
 
 ```console
-sudo service unbound restart 
+sudo service unbound restart
+sudo service unbound status
 dig pi-hole.net @127.0.0.1 -p 5335
 ```
 
