@@ -140,6 +140,14 @@ XX
 https://avoidthehack.com/best-pihole-blocklists
 https://firebog.net/
 
+
+<h2>Populate Pi-hole</h2>
+XX
+
+<h2>Test Add-blocking</h2>
+
+https://d3ward.github.io/toolz/adblock.html
+
 <h2>Post configuration</h2>
 Updating Pi-hole is easy. This can be done by:
 
