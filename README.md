@@ -23,7 +23,6 @@ Back at the command prompt, change the Pi-hole default password by using:
 pihole -a -p
 ```
 
-
 <h2>Unbound</h2>
 Run the commands below to install Unbound and attain the root.hints file needed.</br>
 
@@ -108,6 +107,8 @@ server:
     private-address: fe80::/10
 ```
 
+Ctrl+O en CTRL+X
+
 Restart the Unbound server and run the dig command to test DNS resolution. You should see the status as “NOERROR” with an IP address for the pi-hole.net server.
 
 ```console
@@ -119,21 +120,32 @@ dig pi-hole.net @127.0.0.1 -p 5335
 The final test is to ensure that DNSSEC is working properly. First, if you’re interested in learning what DNSSEC is, this is a great explanation. There are two commands that you can run to ensure that DNSSEC is working properly.
 
 ```console
-dig sigfail.verteiltesysteme.net @127.0.0.1 -p 5335
+dig fail01.dnssec.works @127.0.0.1 -p 5335
 ```
 This command should return <code>SERVFAIL</code> with <code>NO IP</code> address.
 
 ```console
-dig sigok.verteiltesysteme.net @127.0.0.1 -p 5335
+dig dnssec.works @127.0.0.1 -p 5335
 ```
 
-This command should return <code>NOERROR WITH</code> an IP address. If both are returned properly, DNSSEC is properly working. 
+This command should return <code>NOERROR WITH</code> an IP address.</br>
+ If both are returned properly, DNSSEC is properly working. 
 
+<h2>Point Pihole to Unbound</h2>
+XX
 
+<h2>Configuring Blocklist</h2>
+XX
 
+https://avoidthehack.com/best-pihole-blocklists
+https://firebog.net/
 
 <h2>Post configuration</h2>
+Updating Pi-hole is easy. This can be done by:
 
 ```console
-
+sudo pihole -up
 ```
+
+Set local firewall</br>
+Schedule Cron Job for updating
