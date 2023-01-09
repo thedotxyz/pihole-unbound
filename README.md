@@ -28,7 +28,7 @@ pihole -a -p
 Run the commands below to install Unbound and attain the root.hints file needed.</br>
 
 ```console
-sudo apt install unbound
+sudo apt install unbound -y
 wget https://www.internic.net/domain/named.root -qO- | sudo tee /var/lib/unbound/root.hints
 ```
 Create a file that will force Unbound to only listen for queries from Pi-hole. There are a few other benefits that can be found on the official Unbound page.
