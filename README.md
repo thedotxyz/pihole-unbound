@@ -8,8 +8,27 @@ This setup is designed for:
 - Debian 13 Trixie
 - Raspberry Pi OS / Debian-based systems
   
-https://docs.pi-hole.net/guides/dns/unbound/ </br>
+PiHole Unboud: https://docs.pi-hole.net/guides/dns/unbound/ </br>
 DNS Sec: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
+
+<h2>Target Architecture</h2>
+The target architecture is:
+
+```text
+LAN clients
+   |
+   | DNS :53
+   v
+Pi-hole
+   |
+   | upstream DNS: 127.0.0.1#5335
+   v
+Unbound
+   |
+   | recursive DNS queries
+   v
+Root / TLD / authoritative DNS servers
+```
 
 <h2>Prerequisitestes</h2>
 
