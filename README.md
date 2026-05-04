@@ -94,6 +94,172 @@ Back at the command prompt, change the Pi-hole default password by using:
 pihole -a -p
 ```
 
+## Install and configure Unbound
+
+Install Unbound if it is not already installed:
+
+```bash
+sudo apt update
+sudo apt install -y unbound dnsutils
+```
+
+Create the Pi-hole specific Unbound configuration:
+
+```bash
+sudo tee /etc/unbound/unbound.conf.d/pi-hole.conf > /dev/null <<'EOF'
+server:
+    verbosity: 0
+
+    interface: 127.0.0.1
+    port: 5335
+
+    do-ip4: yes
+    do-ip6: no
+    do-udp: yes
+    do-tcp: yes
+
+    # Recommended EDNS buffer size to avoid fragmentation issues
+    edns-buffer-size: 1232
+
+    # Security hardening
+    harden-glue: yes
+    harden-dnssec-stripped: yes
+    harden-below-nxdomain: yes
+    harden-referral-path: yes
+    use-caps-for-id: no
+
+    # Privacy and efficiency
+    qname-minimisation: yes
+    prefetch: yes
+    aggressive-nsec: yes
+
+    # Hide local resolver identity
+    hide-identity: yes
+    hide-version: yes
+
+    # Keep this small for lightweight LXC usage
+    num-threads: 1
+    so-rcvbuf: 1m
+
+    # Do not return private addresses from public DNS
+    private-address: 192.168.0.0/16
+    private-address: 169.254.0.0/16
+    private-address: 172.16.0.0/12
+    private-address: 10.0.0.0/8
+    private-address: fd00::/8
+    private-address: fe80::/10
+    private-address: 192.0.2.0/24
+    private-address: 198.51.100.0/24
+    private-address: 203.0.113.0/24
+    private-address: 255.255.255.255/32
+    private-address: 2001:db8::/32
+EOF
+```
+
+## Debian Bullseye / Bookworm / Trixie resolvconf fix
+
+On modern Debian releases, `unbound-resolvconf.service` may create unwanted resolver configuration.
+
+Disable it and remove the generated resolver file:
+
+```bash
+sudo systemctl disable --now unbound-resolvconf.service 2>/dev/null || true
+
+if [ -f /etc/resolvconf.conf ]; then
+  sudo sed -Ei 's/^unbound_conf=/#unbound_conf=/' /etc/resolvconf.conf
+fi
+
+sudo rm -f /etc/unbound/unbound.conf.d/resolvconf_resolvers.conf
+```
+
+## Validate and restart Unbound
+
+Check the Unbound configuration:
+
+```bash
+sudo unbound-checkconf
+```
+
+Restart Unbound:
+
+```bash
+sudo systemctl restart unbound
+sudo systemctl enable unbound
+```
+
+Check if Unbound is listening on localhost port 5335:
+
+```bash
+sudo ss -tulpn | grep 5335
+```
+
+Test recursive resolution:
+
+```bash
+dig pi-hole.net @127.0.0.1 -p 5335
+```
+
+Test DNSSEC validation:
+
+```bash
+dig fail01.dnssec.works @127.0.0.1 -p 5335
+dig +ad dnssec.works @127.0.0.1 -p 5335
+```
+
+Expected result:
+
+- `fail01.dnssec.works` should fail DNSSEC validation.
+- `dnssec.works` should return a valid answer with the `ad` flag.
+
+## Point Pi-hole to Unbound
+
+Open the Pi-hole admin UI:
+
+```text
+http://<PIHOLE-IP>/admin
+```
+
+Go to:
+
+```text
+Settings > DNS
+```
+
+Configure:
+
+```text
+Custom DNS server: 127.0.0.1#5335
+```
+
+Disable all other upstream DNS providers.
+
+Save the settings.
+
+Flush Pi-hole DNS cache:
+
+```bash
+pihole restartdns
+```
+
+## Verify Pi-hole is using Unbound
+
+From a client machine, query Pi-hole:
+
+```bash
+dig pi-hole.net @<PIHOLE-IP>
+```
+
+On the Pi-hole host/container, verify queries in the live log:
+
+```bash
+pihole tail
+```
+
+You should see client queries arriving at Pi-hole. Pi-hole should forward allowed domains to Unbound on `127.0.0.1#5335`.
+
+
+
+=========================
 ## Install Unbound
 Run the commands below to install Unbound and attain the root.hints file needed.</br>
 
