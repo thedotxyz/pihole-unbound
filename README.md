@@ -42,14 +42,34 @@ Network:     Bridged network with static IP or DHCP reservation
 Do not use Docker inside LXC for this setup unless you have a specific operational reason. A native Debian LXC is simpler, smaller and easier to maintain.
 
 ## Prerequisitestes
+## Prerequisites
+
+This guide assumes one of the following base systems:
+
+- Debian 13 Trixie
+- Debian 12 Bookworm
+- Raspberry Pi OS based on Debian
+
+For Proxmox VE, the recommended deployment model is:
+
+```text
+Type:        Unprivileged LXC
+OS:          Debian 13 standard template
+CPU:         1 vCPU
+RAM:         512 MB minimum, 1 GB recommended
+Disk:        4 GB minimum, 8 GB recommended
+Network:     Bridged network with static IP or DHCP reservation
+```
+
 Before installing, make sure:
 
-- The host has a static IP address or DHCP reservation.
+- The host or container has a static IP address or DHCP reservation.
 - No other service is already listening on port 53.
 - Outbound DNS traffic to the internet on TCP/UDP port 53 is allowed.
-- The system can reach the DNS root servers.
+- The system can reach the DNS root servers directly.
 - You have root access or sudo permissions.
 - Pi-hole DHCP is disabled unless you explicitly want Pi-hole to act as DHCP server.
+- The Pi-hole admin interface is not exposed directly to the internet.
 
 Install basic packages:
 
@@ -58,7 +78,86 @@ sudo apt update
 sudo apt install -y curl wget dnsutils unbound ca-certificates
 ```
 
+## Proxmox LXC preparation
+
+If you are installing this on Proxmox VE, use a lightweight Debian 13 unprivileged LXC container.
+
+Update the Proxmox template list:
+
+```bash
+pveam update
+```
+
+List available Debian templates:
+
+```bash
+pveam available --section system | grep debian
+```
+
+Download the Debian 13 standard template:
+
+```bash
+pveam download local debian-13-standard_13.1-2_amd64.tar.zst
+```
+
+Create a new unprivileged LXC container:
+
+```bash
+pct create 110 local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst \
+  --hostname dns01 \
+  --cores 1 \
+  --memory 512 \
+  --swap 512 \
+  --rootfs local-lvm:8 \
+  --net0 name=eth0,bridge=vmbr0,ip=dhcp,type=veth \
+  --unprivileged 1 \
+  --onboot 1 \
+  --start 1
+```
+
+Enter the container:
+
+```bash
+pct enter 110
+```
+
+Update the container and install basic packages:
+
+```bash
+apt update
+apt upgrade -y
+apt install -y curl wget dnsutils sudo ca-certificates unbound
+```
+
+For DNS infrastructure, use a stable IP address.
+
+Either configure a DHCP reservation on your router/firewall, or configure a static IP address in Proxmox.
+
+Example:
+
+```bash
+pct stop 110
+pct set 110 --net0 name=eth0,bridge=vmbr0,ip=192.168.1.53/24,gw=192.168.1.1,type=veth
+pct start 110
+```
+
+Adjust the IP address and gateway to match your own network.
+
+Validate basic connectivity from inside the container:
+
+```bash
+pct enter 110
+
+ip a
+ip route
+ping -c 3 1.1.1.1
+ping -c 3 debian.org
+```
+
+After this, continue with the Pi-hole installation.
+
 ## Pre-flight checks
+
 Check if anything is already using DNS port 53:
 
 ```bash
@@ -73,7 +172,7 @@ dig @198.41.0.4 . NS +norec +tcp +time=3
 dig @198.41.0.4 version.bind CH TXT +time=3
 ```
 
-If these tests fail, your ISP, router or firewall may be blocking or intercepting direct DNS traffic. Fix that before continuing.
+If these tests fail, your ISP, router or firewall may be blocking or intercepting direct DNS traffic.
 
 ## Install Pi-hole
 First install Pi-hole, using the official Pi-hole installer:
