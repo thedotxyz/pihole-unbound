@@ -40,22 +40,55 @@ RAM:         512 MB minimum, 1 GB recommended
 Disk:        4 GB minimum, 8 GB recommended
 Network:     Bridged network with static IP or DHCP reservation
 ```
-
+Do not use Docker inside LXC for this setup unless you have a specific operational reason. A native Debian LXC is simpler, smaller and easier to maintain.
 
 <h2>Prerequisitestes</h2>
+Before installing, make sure:
 
+- The host has a static IP address or DHCP reservation.
+- No other service is already listening on port 53.
+- Outbound DNS traffic to the internet on TCP/UDP port 53 is allowed.
+- The system can reach the DNS root servers.
+- You have root access or sudo permissions.
+- Pi-hole DHCP is disabled unless you explicitly want Pi-hole to act as DHCP server.
 
+Install basic packages:
 
-<h2>Pre configuration</h2>
-test
+```bash
+sudo apt update
+sudo apt install -y curl wget dnsutils unbound ca-certificates
+```
 
-<h3>Pi-hole</h3>
-First install Pi-hole, using:
+<h2>Pre-flight checks/h2>
+Check if anything is already using DNS port 53:
+
+```bash
+sudo ss -tulpn | grep ':53 ' || true
+```
+
+Check whether the system can reach the DNS root servers directly:
+
+```bash
+dig @198.41.0.4 . NS +norec +time=3
+dig @198.41.0.4 . NS +norec +tcp +time=3
+dig @198.41.0.4 version.bind CH TXT +time=3
+```
+
+If these tests fail, your ISP, router or firewall may be blocking or intercepting direct DNS traffic. Fix that before continuing.
+
+<h3>Install Pi-hole</h3>
+First install Pi-hole, using the official Pi-hole installer:
 
 ```console
 curl -sSL https://install.pi-hole.net | bash
 ```
-Choose default options untill you can choose an upstream DNS provider. For now choose cloudflare (1.1.1.1) als Upstream DNS provider. We will change this to Unbound later on in this instruction. After this keep choosing the default options until you see a summary and the default admin password (which we will change).
+During installation:
+
+- Choose the network interface used by the container/host.
+- Confirm or configure the static IP address.
+- Select any temporary upstream DNS provider (for instance 'Cloudflare' (1.1.1.1)). This will be replaced later by Unbound.
+- Enable the web interface.
+- Enable query logging according to your own privacy requirements.
 
 Back at the command prompt, change the Pi-hole default password by using:
 
@@ -63,7 +96,7 @@ Back at the command prompt, change the Pi-hole default password by using:
 pihole -a -p
 ```
 
-<h2>Unbound</h2>
+<h2>Install Unbound</h2>
 Run the commands below to install Unbound and attain the root.hints file needed.</br>
 
 ```console
