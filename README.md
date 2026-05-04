@@ -2,7 +2,6 @@
 Lightweight setup for running Pi-hole with Unbound as a local recursive DNS resolver.
 
 This setup is designed for:
-
 - Proxmox VE with a Debian LXC container
 - Debian 12 Bookworm
 - Debian 13 Trixie
@@ -11,7 +10,7 @@ This setup is designed for:
 PiHole Unbound: https://docs.pi-hole.net/guides/dns/unbound/ </br>
 DNS Sec: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
 
-<h2>Target Architecture</h2>
+## Target Architecture
 The target architecture is:
 
 ```text
@@ -29,7 +28,7 @@ Unbound
    v
 Root / TLD / authoritative DNS servers
 ```
-<h2>Recommended platform</h2>
+## Recommended platform<
 For Proxmox, use:
 
 ```text
@@ -42,7 +41,7 @@ Network:     Bridged network with static IP or DHCP reservation
 ```
 Do not use Docker inside LXC for this setup unless you have a specific operational reason. A native Debian LXC is simpler, smaller and easier to maintain.
 
-<h2>Prerequisitestes</h2>
+## Prerequisitestes
 Before installing, make sure:
 
 - The host has a static IP address or DHCP reservation.
@@ -59,7 +58,7 @@ sudo apt update
 sudo apt install -y curl wget dnsutils unbound ca-certificates
 ```
 
-<h2>Pre-flight checks/h2>
+## Pre-flight checks
 Check if anything is already using DNS port 53:
 
 ```bash
@@ -76,14 +75,13 @@ dig @198.41.0.4 version.bind CH TXT +time=3
 
 If these tests fail, your ISP, router or firewall may be blocking or intercepting direct DNS traffic. Fix that before continuing.
 
-<h3>Install Pi-hole</h3>
+## Install Pi-hole
 First install Pi-hole, using the official Pi-hole installer:
 
 ```console
 curl -sSL https://install.pi-hole.net | bash
 ```
 During installation:
-
 - Choose the network interface used by the container/host.
 - Confirm or configure the static IP address.
 - Select any temporary upstream DNS provider (for instance 'Cloudflare' (1.1.1.1)). This will be replaced later by Unbound.
@@ -96,7 +94,7 @@ Back at the command prompt, change the Pi-hole default password by using:
 pihole -a -p
 ```
 
-<h2>Install Unbound</h2>
+## Install Unbound
 Run the commands below to install Unbound and attain the root.hints file needed.</br>
 
 ```console
