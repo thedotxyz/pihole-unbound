@@ -29,6 +29,18 @@ Unbound
    v
 Root / TLD / authoritative DNS servers
 ```
+<h2>Recommended platform</h2>
+For Proxmox, use:
+
+```text
+Type:        Unprivileged LXC
+OS:          Debian 12 or Debian 13 standard template
+CPU:         1 vCPU
+RAM:         512 MB minimum, 1 GB recommended
+Disk:        4 GB minimum, 8 GB recommended
+Network:     Bridged network with static IP or DHCP reservation
+```
+
 
 <h2>Prerequisitestes</h2>
 
