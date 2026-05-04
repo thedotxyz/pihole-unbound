@@ -8,7 +8,7 @@ This setup is designed for:
 - Debian 13 Trixie
 - Raspberry Pi OS / Debian-based systems
   
-PiHole Unboud: https://docs.pi-hole.net/guides/dns/unbound/ </br>
+PiHole Unbound: https://docs.pi-hole.net/guides/dns/unbound/ </br>
 DNS Sec: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
 
 <h2>Target Architecture</h2>
