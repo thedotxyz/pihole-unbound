@@ -28,7 +28,7 @@ Unbound
    v
 Root / TLD / authoritative DNS servers
 ```
-## Recommended platform<
+## Recommended platform
 For Proxmox, use:
 
 ```text
