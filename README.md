@@ -1,9 +1,18 @@
 # Setup Pi-hole and Unbound on a Raspberry Pi
+Lightweight setup for running Pi-hole with Unbound as a local recursive DNS resolver.
 
+This setup is designed for:
+
+- Proxmox VE with a Debian LXC container
+- Debian 12 Bookworm
+- Debian 13 Trixie
+- Raspberry Pi OS / Debian-based systems
+  
 https://docs.pi-hole.net/guides/dns/unbound/ </br>
 DNS Sec: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
 
 <h2>Prerequisitestes</h2>
+
 
 
 <h2>Pre configuration</h2>
