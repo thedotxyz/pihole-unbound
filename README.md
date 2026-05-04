@@ -230,3 +230,9 @@ sudo pihole -up
 
 Set local firewall</br>
 Schedule Cron Job for updating
+
+## Sources
+- Pi-hole documentation: https://docs.pi-hole.net/
+- Pi-hole Unbound guide: https://docs.pi-hole.net/guides/dns/unbound/
+- InterNIC root hints: https://www.internic.net/domain/named.root
+- Unbound documentation: https://unbound.docs.nlnetlabs.nl/
