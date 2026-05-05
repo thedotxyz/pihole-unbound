@@ -104,7 +104,7 @@ Create a new unprivileged LXC container:
 
 ```bash
 pct create 110 local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst \
-  --hostname dns01 \
+  --hostname DEBPIH01 \
   --cores 1 \
   --memory 512 \
   --swap 512 \
