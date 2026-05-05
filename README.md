@@ -99,6 +99,47 @@ Download the Debian 13 standard template:
 ```bash
 pveam download local debian-13-standard_13.1-2_amd64.tar.zst
 ```
+### Select the target storage
+
+By default, this guide uses `local-lvm` for the container root disk:
+
+```bash
+--rootfs local-lvm:8
+```
+
+This is the default Proxmox LVM-thin storage on many installations.
+
+If you have a separate SSD/NVMe storage pool, you can place the container there instead. First list available Proxmox storage backends:
+
+```bash
+pvesm status
+```
+
+Example output may include storage IDs such as:
+
+```text
+local
+local-lvm
+ssd4tb
+vmdata
+```
+
+Use the storage ID you want for the container root disk.
+
+Examples:
+
+```bash
+--rootfs local-lvm:8
+```
+
+or:
+
+```bash
+--rootfs ssd4tb:8
+```
+
+The number `8` means an 8 GB container root disk.
+For Pi-hole and Unbound, 8 GB is usually sufficient.
 
 Create a new unprivileged LXC container:
 
@@ -108,7 +149,7 @@ pct create 110 local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst \
   --cores 1 \
   --memory 512 \
   --swap 512 \
-  --rootfs local-lvm:8 \
+  --rootfs ssd4tb:8 \
   --net0 name=eth0,bridge=vmbr0,ip=dhcp,type=veth \
   --unprivileged 1 \
   --features nesting=1 \
