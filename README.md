@@ -223,15 +223,29 @@ systemctl status ssh --no-pager
 ```
 
 ### Set the root password
+### Set the root password
+
 If the container was created from the Proxmox shell, set a root password before logging in over SSH.
 
-Run this on the Proxmox host:
+Enter the container from the Proxmox host:
 
 ```bash
-pct passwd 110
+pct enter 110
+```
+
+Set the root password inside the container:
+
+```bash
+passwd
 ```
 
 Enter the new root password twice.
+
+Exit the container:
+
+```bash
+exit
+```
 
 Then test SSH access:
 
