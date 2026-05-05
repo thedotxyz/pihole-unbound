@@ -178,6 +178,43 @@ This is recommended because the interactive Pi-hole installer may not behave cor
 apt install -y openssh-server
 systemctl enable --now ssh
 ```
+### Configure system locale
+
+Some minimal Debian LXC templates may show locale warnings such as:
+
+```text
+perl: warning: Setting locale failed.
+perl: warning: Falling back to the standard locale ("C").
+```
+
+This is not fatal, but it should be fixed before continuing.
+
+Install and generate the default locale:
+
+```bash
+apt install -y locales
+sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+locale-gen
+update-locale LANG=en_US.UTF-8
+```
+
+Reload the locale settings:
+
+```bash
+source /etc/default/locale
+```
+
+Validate the locale configuration:
+
+```bash
+locale
+```
+
+Expected result:
+
+```text
+LANG=en_US.UTF-8
+```
 
 Validate that SSH is running:
 
