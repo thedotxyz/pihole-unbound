@@ -179,7 +179,7 @@ Example:
 
 ```bash
 pct stop 110
-pct set 110 --net0 name=eth0,bridge=vmbr0,ip=192.168.1.53/24,gw=192.168.1.1,type=veth
+pct set 110 --net0 name=eth0,bridge=vmbr0,ip=192.168.1.30/24,gw=192.168.1.1,type=veth
 pct start 110
 ```
 
