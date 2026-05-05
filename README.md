@@ -111,6 +111,7 @@ pct create 110 local:vztmpl/debian-13-standard_13.1-2_amd64.tar.zst \
   --rootfs local-lvm:8 \
   --net0 name=eth0,bridge=vmbr0,ip=dhcp,type=veth \
   --unprivileged 1 \
+  --features nesting=1 \
   --onboot 1 \
   --start 1
 ```
