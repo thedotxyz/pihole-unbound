@@ -222,13 +222,32 @@ Validate that SSH is running:
 systemctl status ssh --no-pager
 ```
 
+### Set the root password
+If the container was created from the Proxmox shell, set a root password before logging in over SSH.
+
+Run this on the Proxmox host:
+
+```bash
+pct passwd 110
+```
+
+Enter the new root password twice.
+
+Then test SSH access:
+
+```bash
+ssh root@192.168.1.30
+```
+
+Adjust the IP address to match your container.
+
 Exit the container:
 
 ```bash
 exit
 ```
 
-After configuring the static IP address below, continue the Pi-hole installation over SSH instead of using `pct enter`.
+After configuring the static IP and SSH, continue the Pi-hole installation over SSH instead of using `pct enter`.
 
 Example:
 
