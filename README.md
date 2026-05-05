@@ -77,9 +77,7 @@ Install basic packages:
 sudo apt update
 sudo apt install -y curl wget dnsutils unbound ca-certificates
 ```
-
 ## Proxmox LXC preparation
-
 If you are installing this on Proxmox VE, use a lightweight Debian 13 unprivileged LXC container.
 
 Update the Proxmox template list:
@@ -168,9 +166,39 @@ Update the container and install basic packages:
 ```bash
 apt update
 apt upgrade -y
-apt install -y curl wget dnsutils sudo ca-certificates unbound
+apt install -y curl wget dnsutils sudo ca-certificates unbound openssh-server
+```
+### Enable SSH access
+
+Install and enable SSH inside the container.
+
+This is recommended because the interactive Pi-hole installer may not behave correctly when started through `pct enter`.
+
+```bash
+apt install -y openssh-server
+systemctl enable --now ssh
 ```
 
+Validate that SSH is running:
+
+```bash
+systemctl status ssh --no-pager
+```
+
+Exit the container:
+
+```bash
+exit
+```
+
+After configuring the static IP address below, continue the Pi-hole installation over SSH instead of using `pct enter`.
+
+Example:
+
+```bash
+ssh root@192.168.1.30
+```
+Adjust the IP address to match your container.
 For DNS infrastructure, use a stable IP address.
 
 Either configure a DHCP reservation on your router/firewall, or configure a static IP address in Proxmox.
@@ -215,11 +243,13 @@ dig @198.41.0.4 version.bind CH TXT +time=3
 ```
 
 If these tests fail, your ISP, router or firewall may be blocking or intercepting direct DNS traffic.
+After this, continue with the Pi-hole installation over SSH.
 
 ## Install Pi-hole
 First install Pi-hole, using the official Pi-hole installer:
 
 ```console
+ssh root@192.168.1.30
 curl -sSL https://install.pi-hole.net | bash
 ```
 During installation:
