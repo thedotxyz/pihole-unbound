@@ -344,7 +344,7 @@ After this, continue with the Pi-hole installation over SSH.
 
 Install Pi-hole using the official Pi-hole installer.
 
-Log in over SSH using the administrative user created earlier:
+Log in over SSH using the administrative user created earlier (if you are not logged in already):
 
 ```bash
 ssh piholeadmin@192.168.1.30
