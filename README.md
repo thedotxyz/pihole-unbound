@@ -358,12 +358,6 @@ Download the official Pi-hole installer:
 curl -sSL https://install.pi-hole.net -o /tmp/pihole-install.sh
 ```
 
-Optional: inspect the installer before running it:
-
-```bash
-less /tmp/pihole-install.sh
-```
-
 Run the installer with sudo:
 
 ```bash
