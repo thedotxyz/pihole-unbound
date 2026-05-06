@@ -584,7 +584,7 @@ dig pi-hole.net @<PIHOLE-IP>
 On the Pi-hole host/container, verify queries in the live log:
 
 ```bash
-pihole tail
+sudo pihole tail
 ```
 
 You should see client queries arriving at Pi-hole. Pi-hole should forward allowed domains to Unbound on `127.0.0.1#5335`.
