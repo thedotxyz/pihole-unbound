@@ -223,7 +223,6 @@ systemctl status ssh --no-pager
 ```
 
 ### Set the root password
-### Set the root password
 
 If the container was created from the Proxmox shell, set a root password before logging in over SSH.
 
