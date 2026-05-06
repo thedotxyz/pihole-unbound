@@ -589,9 +589,234 @@ sudo pihole tail
 
 You should see client queries arriving at Pi-hole. Pi-hole should forward allowed domains to Unbound on `127.0.0.1#5335`.
 
+## LXC hardening
+
+This setup is intended to run in an unprivileged Proxmox LXC container.
+
+Recommended baseline:
+
+- Use an unprivileged LXC container.
+- Do not expose the Pi-hole admin interface to the internet.
+- Do not use Pi-hole as DHCP server unless explicitly required.
+- Use a dedicated admin user with `sudo`.
+- Do not allow root SSH login.
+- Restrict SSH access to trusted admin networks.
+- Restrict DNS access to trusted LAN/VLAN networks.
+- Let the Proxmox host manage system time.
+- Keep the container dedicated to Pi-hole and Unbound.
+
+Validate that the container is unprivileged from the Proxmox host:
+
+```bash
+pct config 110 | grep unprivileged
+```
+
+Expected result:
+
+```text
+unprivileged: 1
+```
+
+Disable root SSH login inside the container:
+
+```bash
+sudo tee /etc/ssh/sshd_config.d/99-disable-root-login.conf > /dev/null <<'EOF'
+PermitRootLogin no
+EOF
+
+sudo sshd -t
+sudo systemctl reload ssh
+```
+
+Validate SSH configuration:
+
+```bash
+sshd -T | grep permitrootlogin
+```
+
+Expected result:
+
+```text
+permitrootlogin no
+```
+
+For Proxmox LXC, disable Pi-hole's NTP time sync client. The container should not adjust system time; the Proxmox host should manage time.
+
+```bash
+sudo pihole-FTL --config ntp.sync.active false
+sudo systemctl restart pihole-FTL
+```
+
+Validate:
+
+```bash
+sudo pihole-FTL --config ntp.sync.active
+```
+## Automatic Debian security updates
+
+Pi-hole itself is not installed through APT, but Debian packages such as `unbound`, `openssh-server`, `ca-certificates` and system libraries are.
+
+Enable automatic Debian security updates with `unattended-upgrades`:
+
+```bash
+sudo apt update
+sudo apt install -y unattended-upgrades apt-listchanges
+```
+
+Create the APT periodic update configuration:
+
+```bash
+sudo tee /etc/apt/apt.conf.d/20auto-upgrades > /dev/null <<'EOF'
+APT::Periodic::Update-Package-Lists "1";
+APT::Periodic::Unattended-Upgrade "1";
+APT::Periodic::AutocleanInterval "7";
+EOF
+```
+
+Create a small local unattended-upgrades policy:
+
+```bash
+sudo tee /etc/apt/apt.conf.d/52unattended-upgrades-local > /dev/null <<'EOF'
+Unattended-Upgrade::Automatic-Reboot "false";
+Unattended-Upgrade::Remove-Unused-Dependencies "true";
+Unattended-Upgrade::SyslogEnable "true";
+EOF
+```
+
+Validate the unattended-upgrades configuration:
+
+```bash
+sudo unattended-upgrade --dry-run --debug
+```
+
+Check the APT timers:
+
+```bash
+systemctl status apt-daily.timer apt-daily-upgrade.timer --no-pager
+```
+
+Check unattended-upgrades logs:
+
+```bash
+sudo tail -n 100 /var/log/unattended-upgrades/unattended-upgrades.log
+```
+
+Manual package update command:
+
+```bash
+sudo apt update
+sudo apt upgrade -y
+sudo apt autoremove -y
+```
+## Pi-hole maintenance and updates
+
+Pi-hole is not updated by Debian `unattended-upgrades`.
+
+Check installed Pi-hole versions:
+
+```bash
+pihole version
+```
+
+Check Pi-hole status:
+
+```bash
+pihole status
+```
+
+Update gravity/blocklists manually:
+
+```bash
+sudo pihole updateGravity
+```
+
+Short form:
+
+```bash
+sudo pihole -g
+```
+
+Pi-hole updates gravity automatically on a weekly schedule, but manual updates can be useful after changing adlists.
+
+## Pi-hole update procedure
+
+Before updating Pi-hole, create a Proxmox snapshot from the Proxmox host:
+
+```bash
+pct snapshot 110 pre-pihole-update-$(date +%Y%m%d)
+```
+
+Then update Pi-hole inside the container:
+
+```bash
+sudo pihole -up
+```
+
+After the update, validate services:
+
+```bash
+pihole status
+sudo systemctl status pihole-FTL --no-pager
+sudo systemctl status unbound --no-pager
+```
+
+Validate DNS resolution through Pi-hole:
+
+```bash
+dig pi-hole.net @127.0.0.1
+dig pi-hole.net @<PIHOLE-IP>
+```
+
+Validate Unbound directly:
+
+```bash
+dig pi-hole.net @127.0.0.1 -p 5335
+```
+
+Validate DNSSEC:
+
+```bash
+dig fail01.dnssec.works @127.0.0.1 -p 5335
+dig +ad dnssec.works @127.0.0.1 -p 5335
+```
+
+Expected result:
+
+- `fail01.dnssec.works` returns `SERVFAIL`.
+- `dnssec.works` returns `NOERROR` with the `ad` flag.
+
+## Operational backup recommendation
+
+For Proxmox, schedule regular backups of the LXC container.
+
+Recommended minimum:
+
+```text
+Backup frequency: daily or weekly
+Mode:             snapshot
+Retention:        at least 3 recent backups
+Scope:            LXC container including root disk
+```
+
+Before major changes, create a manual snapshot:
+
+```bash
+pct snapshot 110 before-major-change-$(date +%Y%m%d)
+```
+
+Examples of major changes:
+
+- Pi-hole version update
+- Debian release upgrade
+- Unbound configuration change
+- Network or VLAN change
+- Router/DHCP DNS change
 
 
-=========================
+
+
+END
+============================================
 ## Install Unbound
 Run the commands below to install Unbound and attain the root.hints file needed.</br>
 
