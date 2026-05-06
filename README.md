@@ -386,11 +386,12 @@ During installation:
 - Enable the web interface.
 - Enable query logging according to your own privacy requirements.
 
-After the installation, set or change the Pi-hole admin password:
+After the installation, set or change the Pi-hole web admin password:
 
 ```bash
-sudo pihole -a -p
+sudo pihole setpassword
 ```
+Enter the new password twice when prompted.
 
 Check Pi-hole status:
 
