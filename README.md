@@ -543,7 +543,7 @@ Save the settings.
 Flush Pi-hole DNS cache:
 
 ```bash
-pihole restartdns
+sudo pihole reloaddns
 ```
 
 ## Verify Pi-hole is using Unbound
