@@ -166,18 +166,9 @@ Update the container and install basic packages:
 ```bash
 apt update
 apt upgrade -y
-apt install -y curl wget dnsutils sudo ca-certificates unbound openssh-server
+apt install -y curl wget dnsutils sudo ca-certificates unbound openssh-server locales
 ```
-### Enable SSH access
 
-Install and enable SSH inside the container.
-
-This is recommended because the interactive Pi-hole installer may not behave correctly when started through `pct enter`.
-
-```bash
-apt install -y openssh-server
-systemctl enable --now ssh
-```
 ### Configure system locale
 
 Some minimal Debian LXC templates may show locale warnings such as:
@@ -189,10 +180,9 @@ perl: warning: Falling back to the standard locale ("C").
 
 This is not fatal, but it should be fixed before continuing.
 
-Install and generate the default locale:
+Generate and configure the default locale:
 
 ```bash
-apt install -y locales
 sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
 locale-gen
 update-locale LANG=en_US.UTF-8
@@ -216,63 +206,58 @@ Expected result:
 LANG=en_US.UTF-8
 ```
 
+### Create an administrative user
+
+Do not use root SSH login for the installation.
+
+Create a dedicated administrative user and grant sudo permissions:
+
+```bash
+adduser piholeadmin
+usermod -aG sudo piholeadmin
+```
+
+Validate the sudo group membership:
+
+```bash
+groups piholeadmin
+```
+
+Expected result should include:
+
+```text
+sudo
+```
+
+### Enable SSH access
+
+Enable SSH inside the container.
+
+This is recommended because the interactive Pi-hole installer may not behave correctly when started through `pct enter`.
+
+```bash
+systemctl enable --now ssh
+```
+
 Validate that SSH is running:
 
 ```bash
 systemctl status ssh --no-pager
 ```
 
-### Set the root password
+### Configure a static IP address
 
-If the container was created from the Proxmox shell, set a root password before logging in over SSH.
-
-Enter the container from the Proxmox host:
-
-```bash
-pct enter 110
-```
-
-Set the root password inside the container:
-
-```bash
-passwd
-```
-
-Enter the new root password twice.
-
-Exit the container:
-
-```bash
-exit
-```
-
-Then test SSH access:
-
-```bash
-ssh root@192.168.1.30
-```
-
-Adjust the IP address to match your container.
-
-Exit the container:
-
-```bash
-exit
-```
-
-After configuring the static IP and SSH, continue the Pi-hole installation over SSH instead of using `pct enter`.
-
-Example:
-
-```bash
-ssh root@192.168.1.30
-```
-Adjust the IP address to match your container.
 For DNS infrastructure, use a stable IP address.
 
 Either configure a DHCP reservation on your router/firewall, or configure a static IP address in Proxmox.
 
-Example:
+To configure a static IP address in Proxmox, first exit the container:
+
+```bash
+exit
+```
+
+Then run this on the Proxmox host:
 
 ```bash
 pct stop 110
@@ -282,20 +267,58 @@ pct start 110
 
 Adjust the IP address and gateway to match your own network.
 
-Validate basic connectivity from inside the container:
+### Validate basic connectivity
+
+Enter the container again:
 
 ```bash
 pct enter 110
+```
 
+Validate basic network connectivity from inside the container:
+
+```bash
 ip a
 ip route
 ping -c 3 1.1.1.1
 ping -c 3 debian.org
 ```
 
-After this, continue with the Pi-hole installation.
+Exit the container:
+
+```bash
+exit
+```
+
+### Continue installation over SSH
+
+Continue the installation over SSH using the administrative user.
+
+Example:
+
+```bash
+ssh piholeadmin@192.168.1.30
+```
+
+Adjust the IP address to match your container.
+
+Validate sudo access:
+
+```bash
+sudo whoami
+```
+
+Expected result:
+
+```text
+root
+```
+
+After this, continue with the pre-flight checks and the Pi-hole installation.
 
 ## Pre-flight checks
+
+Run these checks from the SSH session inside the container.
 
 Check if anything is already using DNS port 53:
 
@@ -312,6 +335,9 @@ dig @198.41.0.4 version.bind CH TXT +time=3
 ```
 
 If these tests fail, your ISP, router or firewall may be blocking or intercepting direct DNS traffic.
+
+Fix that before continuing.
+
 After this, continue with the Pi-hole installation over SSH.
 
 ## Install Pi-hole
