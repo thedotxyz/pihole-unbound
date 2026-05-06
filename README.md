@@ -350,7 +350,28 @@ Log in over SSH using the administrative user created earlier (if you are not lo
 ssh piholeadmin@192.168.1.30
 ```
 
-Adjust the IP address to match your container.
+(Don't forget to adjust the IP address to match your container).
+
+### (Optional) Fix terminal line drawing issues
+
+If the Pi-hole installer shows broken line drawing characters such as `q`, `x`, `l` and `k`, the issue is usually the SSH terminal emulation, not Pi-hole.
+
+Set the terminal environment before starting the installer:
+
+```bash
+export TERM=xterm-256color
+export LANG=en_US.UTF-8
+export LC_ALL=en_US.UTF-8
+export NCURSES_NO_UTF8_ACS=1
+```
+
+Then start the installer:
+
+```bash
+sudo bash /tmp/pihole-install.sh
+```
+
+If the issue persists, make sure your SSH client uses UTF-8 encoding and an `xterm-256color` terminal type.
 
 Download the official Pi-hole installer:
 
