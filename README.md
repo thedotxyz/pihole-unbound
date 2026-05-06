@@ -341,23 +341,53 @@ Fix that before continuing.
 After this, continue with the Pi-hole installation over SSH.
 
 ## Install Pi-hole
-First install Pi-hole, using the official Pi-hole installer:
 
-```console
-ssh root@192.168.1.30
-curl -sSL https://install.pi-hole.net | bash
+Install Pi-hole using the official Pi-hole installer.
+
+Log in over SSH using the administrative user created earlier:
+
+```bash
+ssh piholeadmin@192.168.1.30
 ```
+
+Adjust the IP address to match your container.
+
+Download the official Pi-hole installer:
+
+```bash
+curl -sSL https://install.pi-hole.net -o /tmp/pihole-install.sh
+```
+
+Optional: inspect the installer before running it:
+
+```bash
+less /tmp/pihole-install.sh
+```
+
+Run the installer with sudo:
+
+```bash
+sudo bash /tmp/pihole-install.sh
+```
+
 During installation:
-- Choose the network interface used by the container/host.
-- Confirm or configure the static IP address.
-- Select any temporary upstream DNS provider (for instance 'Cloudflare' (1.1.1.1)). This will be replaced later by Unbound.
+
+- Choose the network interface used by the container.
+- Confirm the static IP address.
+- Select any temporary upstream DNS provider, for example Cloudflare `1.1.1.1`. This will be replaced later by Unbound.
 - Enable the web interface.
 - Enable query logging according to your own privacy requirements.
 
-Back at the command prompt, change the Pi-hole default password by using:
+After the installation, set or change the Pi-hole admin password:
 
-```console
-pihole -a -p
+```bash
+sudo pihole -a -p
+```
+
+Check Pi-hole status:
+
+```bash
+pihole status
 ```
 
 ## Install and configure Unbound
