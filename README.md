@@ -49,7 +49,6 @@ Root / TLD / authoritative DNS servers
 
 ## Contents
 
-- [Recommended platform](#recommended-platform)
 - [Prerequisites](#prerequisites)
 - [Proxmox LXC preparation](#proxmox-lxc-preparation)
 - [Pre-flight checks](#pre-flight-checks)
@@ -64,28 +63,17 @@ Root / TLD / authoritative DNS servers
 - [Security validation checklist](#security-validation-checklist)
 - [Sources](#sources)
 
-## Recommended platform
-For Proxmox, use:
-
-```text
-Type:        Unprivileged LXC
-OS:          Debian 12 or Debian 13 standard template
-CPU:         1 vCPU
-RAM:         512 MB minimum, 1 GB recommended
-Disk:        4 GB minimum, 8 GB recommended
-Network:     Bridged network with static IP or DHCP reservation
-```
-Do not use Docker inside LXC for this setup unless you have a specific operational reason. A native Debian LXC is simpler, smaller and easier to maintain.
-
 ## Prerequisites
 
-This guide assumes one of the following base systems:
+This guide supports the following deployment models:
 
-- Debian 13 Trixie
-- Debian 12 Bookworm
-- Raspberry Pi OS based on Debian
+```text
+Proxmox VE    Debian 13 or Debian 12 unprivileged LXC
+Raspberry Pi Raspberry Pi OS based on Debian
+Debian        Debian 13 Trixie or Debian 12 Bookworm
+```
 
-For Proxmox VE, the recommended deployment model is:
+For Proxmox VE, the recommended container profile is:
 
 ```text
 Type:        Unprivileged LXC
@@ -94,6 +82,15 @@ CPU:         1 vCPU
 RAM:         512 MB minimum, 1 GB recommended
 Disk:        4 GB minimum, 8 GB recommended
 Network:     Bridged network with static IP or DHCP reservation
+```
+
+For Raspberry Pi or standalone Debian systems, use:
+
+```text
+OS:          Raspberry Pi OS or Debian 12/13
+RAM:         512 MB minimum, 1 GB recommended
+Disk:        4 GB minimum, 8 GB recommended
+Network:     Static IP or DHCP reservation
 ```
 
 Before installing, make sure:
@@ -106,12 +103,14 @@ Before installing, make sure:
 - Pi-hole DHCP is disabled unless you explicitly want Pi-hole to act as DHCP server.
 - The Pi-hole admin interface is not exposed directly to the internet.
 
-Install basic packages:
+Deployment guidance:
 
-```bash
-sudo apt update
-sudo apt install -y curl wget dnsutils unbound ca-certificates
-```
+- Use a native Debian LXC on Proxmox VE.
+- Do not use Docker inside LXC unless you have a specific operational reason.
+- Keep the system dedicated to Pi-hole and Unbound.
+- Let Pi-hole handle filtering.
+- Let Unbound handle recursive DNS and DNSSEC validation.
+
 ## Proxmox LXC preparation
 If you are installing this on Proxmox VE, use a lightweight Debian 13 unprivileged LXC container.
 
