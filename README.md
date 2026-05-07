@@ -47,6 +47,23 @@ Root / TLD / authoritative DNS servers
 - DNSSEC overview: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
 - Unbound documentation: https://unbound.docs.nlnetlabs.nl/
 
+## Contents
+
+- [Recommended platform](#recommended-platform)
+- [Prerequisites](#prerequisites)
+- [Proxmox LXC preparation](#proxmox-lxc-preparation)
+- [Pre-flight checks](#pre-flight-checks)
+- [Install Pi-hole](#install-pi-hole)
+- [Install and configure Unbound](#install-and-configure-unbound)
+- [Point Pi-hole to Unbound](#point-pi-hole-to-unbound)
+- [Verify Pi-hole is using Unbound](#verify-pi-hole-is-using-unbound)
+- [Security hardening](#security-hardening)
+- [Automatic Debian security updates](#automatic-debian-security-updates)
+- [Pi-hole maintenance and updates](#pi-hole-maintenance-and-updates)
+- [Backup recommendation](#backup-recommendation)
+- [Security validation checklist](#security-validation-checklist)
+- [Sources](#sources)
+
 ## Recommended platform
 For Proxmox, use:
 
