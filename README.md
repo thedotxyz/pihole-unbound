@@ -41,7 +41,6 @@ Network:     Bridged network with static IP or DHCP reservation
 ```
 Do not use Docker inside LXC for this setup unless you have a specific operational reason. A native Debian LXC is simpler, smaller and easier to maintain.
 
-## Prerequisitestes
 ## Prerequisites
 
 This guide assumes one of the following base systems:
