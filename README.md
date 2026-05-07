@@ -1374,5 +1374,4 @@ journalctl -u ssh -n 100 --no-pager
 ## Sources
 - Pi-hole documentation: https://docs.pi-hole.net/
 - Pi-hole Unbound guide: https://docs.pi-hole.net/guides/dns/unbound/
-- InterNIC root hints: https://www.internic.net/domain/named.root — only needed when manually managing Unbound root hints
 - Unbound documentation: https://unbound.docs.nlnetlabs.nl/
