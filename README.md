@@ -358,6 +358,35 @@ root
 
 After this, continue with the pre-flight checks and the Pi-hole installation.
 
+## Debian or Raspberry Pi preparation
+
+If you are installing on Raspberry Pi OS or a standalone Debian system, update the system and install the required base packages:
+
+```bash
+sudo apt update
+sudo apt upgrade -y
+sudo apt install -y curl wget dnsutils sudo ca-certificates unbound locales
+```
+
+Configure the default locale if needed:
+
+```bash
+sudo sed -i 's/^# *en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen
+sudo locale-gen
+sudo update-locale LANG=en_US.UTF-8
+```
+
+Validate basic connectivity:
+
+```bash
+ip a
+ip route
+ping -c 3 1.1.1.1
+ping -c 3 debian.org
+```
+
+After this, continue with the pre-flight checks.
+
 ## Pre-flight checks
 
 Run these checks from the SSH session inside the container.
