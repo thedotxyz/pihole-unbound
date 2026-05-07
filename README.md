@@ -49,8 +49,6 @@ Root / TLD / authoritative DNS servers
 
 ## Contents
 
-## Contents
-
 - [What this setup does](#what-this-setup-does)
 - [Key references](#key-references)
 - [Prerequisites](#prerequisites)
@@ -60,11 +58,13 @@ Root / TLD / authoritative DNS servers
   - [Create an administrative user](#create-an-administrative-user)
   - [Enable SSH access](#enable-ssh-access)
   - [Configure a static IP address](#configure-a-static-ip-address)
+  - [Validate basic connectivity](#validate-basic-connectivity)
   - [Continue installation over SSH](#continue-installation-over-ssh)
 - [Debian or Raspberry Pi preparation](#debian-or-raspberry-pi-preparation)
 - [Pre-flight checks](#pre-flight-checks)
 - [Install Pi-hole](#install-pi-hole)
 - [Install and configure Unbound](#install-and-configure-unbound)
+- [Debian Bullseye / Bookworm / Trixie resolvconf fix](#debian-bullseye--bookworm--trixie-resolvconf-fix)
 - [Validate and restart Unbound](#validate-and-restart-unbound)
 - [Point Pi-hole to Unbound](#point-pi-hole-to-unbound)
 - [Verify Pi-hole is using Unbound](#verify-pi-hole-is-using-unbound)
@@ -74,7 +74,9 @@ Root / TLD / authoritative DNS servers
   - [Administrative user](#administrative-user)
   - [SSH hardening](#ssh-hardening)
   - [Firewall guidance](#firewall-guidance)
+  - [Optional local firewall with UFW](#optional-local-firewall-with-ufw)
   - [Proxmox LXC-specific hardening](#proxmox-lxc-specific-hardening)
+  - [Proxmox firewall recommendation](#proxmox-firewall-recommendation)
   - [Raspberry Pi-specific hardening](#raspberry-pi-specific-hardening)
   - [Pi-hole NTP behavior](#pi-hole-ntp-behavior)
   - [Fail2ban](#fail2ban)
