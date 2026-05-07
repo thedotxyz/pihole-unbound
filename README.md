@@ -589,35 +589,87 @@ sudo pihole tail
 
 You should see client queries arriving at Pi-hole. Pi-hole should forward allowed domains to Unbound on `127.0.0.1#5335`.
 
-## LXC hardening
+## Security hardening
 
-This setup is intended to run in an unprivileged Proxmox LXC container.
+This guide supports both:
 
-Recommended baseline:
+- Proxmox VE unprivileged LXC containers
+- Raspberry Pi OS / Debian-based systems
 
-- Use an unprivileged LXC container.
-- Do not expose the Pi-hole admin interface to the internet.
-- Do not use Pi-hole as DHCP server unless explicitly required.
-- Use a dedicated admin user with `sudo`.
-- Do not allow root SSH login.
-- Restrict SSH access to trusted admin networks.
-- Restrict DNS access to trusted LAN/VLAN networks.
-- Let the Proxmox host manage system time.
-- Keep the container dedicated to Pi-hole and Unbound.
+The security baseline is the same for both:
 
-Validate that the container is unprivileged from the Proxmox host:
+```text
+Internet exposure:     none
+SSH:                   admin network only
+Pi-hole web UI:         admin network only
+DNS port 53:            trusted LAN/VLAN clients only
+Unbound port 5335:      localhost only
+Root SSH login:         disabled
+Updates:                Debian security updates automatic
+Pi-hole updates:        manual after backup/snapshot
+```
+
+## Network exposure baseline
+
+Do not expose this system directly to the internet.
+
+Recommended exposure:
+
+```text
+Service        Port        Source
+DNS            53/tcp      Trusted LAN/VLAN clients only
+DNS            53/udp      Trusted LAN/VLAN clients only
+Pi-hole UI     80/tcp      Admin network only
+Pi-hole UI     443/tcp     Admin network only, if enabled
+SSH            22/tcp      Admin network only
+Unbound        5335/tcp    Localhost only
+Unbound        5335/udp    Localhost only
+NTP            123/udp     Only if Pi-hole NTP server is intentionally enabled
+DHCP           67/udp      Only if Pi-hole DHCP server is intentionally enabled
+```
+
+Unbound should only listen on localhost:
 
 ```bash
-pct config 110 | grep unprivileged
+sudo ss -tulpn | grep 5335
 ```
 
 Expected result:
 
 ```text
-unprivileged: 1
+127.0.0.1:5335
 ```
 
-Disable root SSH login inside the container:
+If Unbound listens on `0.0.0.0:5335` or on the LAN IP address, fix the Unbound configuration before continuing.
+
+## Administrative user
+
+Use a dedicated administrative user with `sudo`.
+
+Do not use root SSH login for normal administration.
+
+Example:
+
+```bash
+sudo adduser piholeadmin
+sudo usermod -aG sudo piholeadmin
+```
+
+Validate group membership:
+
+```bash
+groups piholeadmin
+```
+
+Expected result should include:
+
+```text
+sudo
+```
+
+## SSH hardening
+
+Disable root SSH login:
 
 ```bash
 sudo tee /etc/ssh/sshd_config.d/99-disable-root-login.conf > /dev/null <<'EOF'
@@ -628,7 +680,7 @@ sudo sshd -t
 sudo systemctl reload ssh
 ```
 
-Validate SSH configuration:
+Validate:
 
 ```bash
 sshd -T | grep permitrootlogin
@@ -640,7 +692,261 @@ Expected result:
 permitrootlogin no
 ```
 
-For Proxmox LXC, disable Pi-hole's NTP time sync client. The container should not adjust system time; the Proxmox host should manage time.
+Optional: use SSH keys and disable password authentication.
+
+First copy your SSH key to the administrative user:
+
+```bash
+ssh-copy-id piholeadmin@<PIHOLE-IP>
+```
+
+Validate key-based login from a new terminal:
+
+```bash
+ssh piholeadmin@<PIHOLE-IP>
+```
+
+Only after validating SSH key login, disable password authentication:
+
+```bash
+sudo tee /etc/ssh/sshd_config.d/99-disable-password-login.conf > /dev/null <<'EOF'
+PasswordAuthentication no
+KbdInteractiveAuthentication no
+EOF
+
+sudo sshd -t
+sudo systemctl reload ssh
+```
+
+Validate:
+
+```bash
+sshd -T | grep -E 'passwordauthentication|kbdinteractiveauthentication'
+```
+
+Expected result:
+
+```text
+passwordauthentication no
+kbdinteractiveauthentication no
+```
+
+Keep an active SSH session open while testing SSH changes.
+
+If SSH access breaks:
+
+- On Proxmox LXC, use `pct enter <CTID>` from the Proxmox host.
+- On Raspberry Pi, use local console access or attach keyboard/monitor.
+
+## Firewall guidance
+
+Prefer enforcing access control at the router/firewall or Proxmox layer.
+
+Recommended control points:
+
+- Router/firewall: allow trusted client networks to reach Pi-hole on port 53.
+- Router/firewall: block internet access to SSH and the Pi-hole web interface.
+- Proxmox firewall: restrict LXC access to trusted admin and LAN/VLAN networks.
+- Local firewall: optional, useful for Raspberry Pi or standalone Debian systems.
+
+Do not expose these ports from the internet:
+
+```text
+22/tcp
+53/tcp
+53/udp
+80/tcp
+443/tcp
+5335/tcp
+5335/udp
+```
+
+Preferred model:
+
+```text
+Client LAN/VLANs  -> Pi-hole DNS :53
+Admin network     -> SSH :22 and Pi-hole UI :80/:443
+Internet          -> no inbound access
+```
+
+## Optional local firewall with UFW
+
+This section is optional.
+
+Use this on Raspberry Pi or standalone Debian systems if you want local host firewalling.
+
+For Proxmox LXC, prefer the Proxmox firewall or router/firewall rules first.
+
+Install UFW:
+
+```bash
+sudo apt update
+sudo apt install -y ufw
+```
+
+Set default policies:
+
+```bash
+sudo ufw default deny incoming
+sudo ufw default allow outgoing
+```
+
+Allow SSH from the admin network:
+
+```bash
+sudo ufw allow from 192.168.1.0/24 to any port 22 proto tcp
+```
+
+Allow Pi-hole web UI from the admin network:
+
+```bash
+sudo ufw allow from 192.168.1.0/24 to any port 80 proto tcp
+sudo ufw allow from 192.168.1.0/24 to any port 443 proto tcp
+```
+
+Allow DNS from trusted LAN/VLAN networks:
+
+```bash
+sudo ufw allow from 192.168.1.0/24 to any port 53 proto udp
+sudo ufw allow from 192.168.1.0/24 to any port 53 proto tcp
+```
+
+Only if Pi-hole is intentionally used as NTP server:
+
+```bash
+sudo ufw allow from 192.168.1.0/24 to any port 123 proto udp
+```
+
+Only if Pi-hole is intentionally used as DHCP server:
+
+```bash
+sudo ufw allow from 192.168.1.0/24 to any port 67 proto udp
+```
+
+Enable UFW:
+
+```bash
+sudo ufw enable
+```
+
+Validate:
+
+```bash
+sudo ufw status verbose
+```
+
+Adjust `192.168.1.0/24` to match your own admin and client networks.
+
+Do not allow inbound access to Unbound port `5335`. Unbound should only listen on `127.0.0.1`.
+
+## Proxmox LXC-specific hardening
+
+This setup should run as an unprivileged container.
+
+Validate from the Proxmox host:
+
+```bash
+pct config 110 | grep unprivileged
+```
+
+Expected result:
+
+```text
+unprivileged: 1
+```
+
+Validate nesting if Debian 13 is used:
+
+```bash
+pct config 110 | grep features
+```
+
+Expected result should include:
+
+```text
+features: nesting=1
+```
+
+Do not make the container privileged only to solve application warnings.
+
+For Pi-hole and Unbound, a privileged container is not required.
+
+## Proxmox firewall recommendation
+
+If you use the Proxmox firewall, apply a restrictive policy to the container.
+
+Recommended policy:
+
+```text
+Inbound default:  DROP
+Outbound default: ACCEPT
+```
+
+Allow only:
+
+```text
+22/tcp   from admin network
+80/tcp   from admin network
+443/tcp  from admin network, if used
+53/tcp   from trusted LAN/VLAN networks
+53/udp   from trusted LAN/VLAN networks
+123/udp  from trusted LAN/VLAN networks, only if Pi-hole NTP server is enabled
+67/udp   from trusted LAN/VLAN networks, only if Pi-hole DHCP server is enabled
+```
+
+Do not allow inbound access to Unbound port `5335`.
+
+Example rule model:
+
+```text
+ALLOW  tcp  <ADMIN-NETWORK>  -> <PIHOLE-IP>  port 22
+ALLOW  tcp  <ADMIN-NETWORK>  -> <PIHOLE-IP>  port 80
+ALLOW  tcp  <ADMIN-NETWORK>  -> <PIHOLE-IP>  port 443
+ALLOW  udp  <LAN-NETWORK>    -> <PIHOLE-IP>  port 53
+ALLOW  tcp  <LAN-NETWORK>    -> <PIHOLE-IP>  port 53
+DROP   all  any              -> <PIHOLE-IP>
+```
+
+Adjust `<ADMIN-NETWORK>`, `<LAN-NETWORK>` and `<PIHOLE-IP>` to match your environment.
+
+## Raspberry Pi-specific hardening
+
+For Raspberry Pi installations:
+
+- Keep Raspberry Pi OS updated.
+- Disable unused services.
+- Do not expose SSH or the Pi-hole web interface to the internet.
+- Use SSH keys where possible.
+- Use a stable wired network connection where possible.
+- Use a reliable power supply.
+- Use a DHCP reservation or static IP address.
+- Make regular backups of the SD card or boot disk.
+
+Check enabled services:
+
+```bash
+systemctl list-unit-files --state=enabled
+```
+
+Check listening ports:
+
+```bash
+sudo ss -tulpn
+```
+
+Disable services you do not use.
+
+Example:
+
+```bash
+sudo systemctl disable --now <service-name>
+```
+
+## Pi-hole NTP behavior
+
+Pi-hole v6 includes NTP functionality.
+
+For Proxmox LXC, let the Proxmox host manage system time and disable Pi-hole's NTP time sync client inside the container:
 
 ```bash
 sudo pihole-FTL --config ntp.sync.active false
@@ -652,11 +958,56 @@ Validate:
 ```bash
 sudo pihole-FTL --config ntp.sync.active
 ```
+
+Expected result:
+
+```text
+false
+```
+
+Optional: if you do not want Pi-hole to act as an NTP server for your LAN, disable the Pi-hole NTP server as well:
+
+```bash
+sudo pihole-FTL --config ntp.ipv4.active false
+sudo pihole-FTL --config ntp.ipv6.active false
+sudo systemctl restart pihole-FTL
+```
+
+On Raspberry Pi, Pi-hole NTP can be left enabled if you intentionally want the device to provide NTP services to your LAN.
+
+## Fail2ban
+
+Fail2ban is not required for the default deployment model.
+
+Preferred controls:
+
+- Do not expose SSH to the internet.
+- Restrict SSH to trusted admin networks.
+- Disable root SSH login.
+- Prefer SSH keys over passwords.
+- Use Proxmox, router or firewall rules for access control.
+
+Fail2ban can be useful if SSH password authentication remains enabled and the system is reachable from a larger or less trusted network.
+
+Do not make a Proxmox LXC container privileged only to support fail2ban.
+
+If brute-force protection is required, prefer enforcing it at one of these layers:
+
+```text
+1. Router/firewall
+2. Proxmox firewall
+3. VPN / admin network segmentation
+4. SSH key-only authentication
+5. Fail2ban as optional additional control
+```
+
 ## Automatic Debian security updates
 
-Pi-hole itself is not installed through APT, but Debian packages such as `unbound`, `openssh-server`, `ca-certificates` and system libraries are.
+Pi-hole itself is not updated by Debian package updates.
 
-Enable automatic Debian security updates with `unattended-upgrades`:
+However, Debian packages such as `unbound`, `openssh-server`, `ca-certificates` and system libraries should receive security updates.
+
+Install unattended upgrades:
 
 ```bash
 sudo apt update
@@ -673,7 +1024,7 @@ APT::Periodic::AutocleanInterval "7";
 EOF
 ```
 
-Create a small local unattended-upgrades policy:
+Create a local unattended-upgrades policy:
 
 ```bash
 sudo tee /etc/apt/apt.conf.d/52unattended-upgrades-local > /dev/null <<'EOF'
@@ -689,7 +1040,7 @@ Validate the unattended-upgrades configuration:
 sudo unattended-upgrade --dry-run --debug
 ```
 
-Check the APT timers:
+Check APT timers:
 
 ```bash
 systemctl status apt-daily.timer apt-daily-upgrade.timer --no-pager
@@ -701,13 +1052,14 @@ Check unattended-upgrades logs:
 sudo tail -n 100 /var/log/unattended-upgrades/unattended-upgrades.log
 ```
 
-Manual package update command:
+Manual Debian package update command:
 
 ```bash
 sudo apt update
 sudo apt upgrade -y
 sudo apt autoremove -y
 ```
+
 ## Pi-hole maintenance and updates
 
 Pi-hole is not updated by Debian `unattended-upgrades`.
@@ -736,17 +1088,21 @@ Short form:
 sudo pihole -g
 ```
 
-Pi-hole updates gravity automatically on a weekly schedule, but manual updates can be useful after changing adlists.
+Pi-hole updates gravity automatically on a schedule, but manual updates can be useful after changing adlists.
 
 ## Pi-hole update procedure
 
-Before updating Pi-hole, create a Proxmox snapshot from the Proxmox host:
+Before updating Pi-hole, create a backup or snapshot.
+
+For Proxmox LXC, create a snapshot from the Proxmox host:
 
 ```bash
 pct snapshot 110 pre-pihole-update-$(date +%Y%m%d)
 ```
 
-Then update Pi-hole inside the container:
+For Raspberry Pi, create a system backup or export your Pi-hole configuration through the Pi-hole web interface using Teleporter.
+
+Then update Pi-hole inside the system:
 
 ```bash
 sudo pihole -up
@@ -782,12 +1138,14 @@ dig +ad dnssec.works @127.0.0.1 -p 5335
 
 Expected result:
 
-- `fail01.dnssec.works` returns `SERVFAIL`.
-- `dnssec.works` returns `NOERROR` with the `ad` flag.
+```text
+fail01.dnssec.works -> SERVFAIL
+dnssec.works        -> NOERROR with ad flag
+```
 
-## Operational backup recommendation
+## Backup recommendation
 
-For Proxmox, schedule regular backups of the LXC container.
+For Proxmox LXC, schedule regular backups of the container.
 
 Recommended minimum:
 
@@ -804,6 +1162,14 @@ Before major changes, create a manual snapshot:
 pct snapshot 110 before-major-change-$(date +%Y%m%d)
 ```
 
+For Raspberry Pi, use one or more of the following:
+
+- SD card image backup
+- Filesystem backup
+- Pi-hole Teleporter export
+- Configuration backup of `/etc/pihole`
+- Configuration backup of `/etc/unbound`
+
 Examples of major changes:
 
 - Pi-hole version update
@@ -811,6 +1177,78 @@ Examples of major changes:
 - Unbound configuration change
 - Network or VLAN change
 - Router/DHCP DNS change
+- Firewall policy change
+
+## Security validation checklist
+
+Run these checks after installation and after major changes.
+
+Check listening ports:
+
+```bash
+sudo ss -tulpn
+```
+
+Check Pi-hole status:
+
+```bash
+pihole status
+```
+
+Check Unbound status:
+
+```bash
+sudo systemctl status unbound --no-pager
+```
+
+Check SSH root login policy:
+
+```bash
+sshd -T | grep permitrootlogin
+```
+
+Check Unbound localhost binding:
+
+```bash
+sudo ss -tulpn | grep 5335
+```
+
+Check DNS through Pi-hole:
+
+```bash
+dig pi-hole.net @<PIHOLE-IP>
+```
+
+Check Unbound directly:
+
+```bash
+dig pi-hole.net @127.0.0.1 -p 5335
+```
+
+Check DNSSEC:
+
+```bash
+dig fail01.dnssec.works @127.0.0.1 -p 5335
+dig +ad dnssec.works @127.0.0.1 -p 5335
+```
+
+Review recent Pi-hole logs:
+
+```bash
+sudo pihole tail
+```
+
+Review Unbound logs:
+
+```bash
+journalctl -u unbound -n 100 --no-pager
+```
+
+Review SSH logs:
+
+```bash
+journalctl -u ssh -n 100 --no-pager
+```
 
 ## Sources
 - Pi-hole documentation: https://docs.pi-hole.net/
