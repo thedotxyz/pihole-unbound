@@ -594,11 +594,13 @@ Flush Pi-hole DNS cache:
 ```bash
 sudo pihole reloaddns
 ```
-### Disable Pi-hole NTP time sync in Proxmox LXC
+### Pi-hole NTP behavior in Proxmox LXC
 
-Pi-hole v6 includes an NTP client. In an unprivileged Proxmox LXC container, Pi-hole cannot adjust the system time because the container does not have permission to set kernel time.
+Pi-hole v6 includes NTP functionality.
 
-For Proxmox LXC, let the Proxmox host manage system time and disable Pi-hole's NTP time sync client:
+In an unprivileged Proxmox LXC container, Pi-hole cannot adjust the system time because the container does not have permission to set kernel time.
+
+For Proxmox LXC, let the Proxmox host manage system time and disable Pi-hole's NTP time sync client inside the container:
 
 ```bash
 sudo pihole-FTL --config ntp.sync.active false
@@ -611,7 +613,13 @@ Validate the setting:
 sudo pihole-FTL --config ntp.sync.active
 ```
 
-Optional: if you do not want Pi-hole to act as an NTP server for your LAN, disable the NTP server as well:
+Expected result:
+
+```text
+false
+```
+
+Optional: if you do not want Pi-hole to act as an NTP server for your LAN, disable the Pi-hole NTP server as well:
 
 ```bash
 sudo pihole-FTL --config ntp.ipv4.active false
@@ -619,9 +627,7 @@ sudo pihole-FTL --config ntp.ipv6.active false
 sudo systemctl restart pihole-FTL
 ```
 
-(Do not make the container privileged only to resolve this warning. For DNS infrastructure, the Proxmox host should manage time).
-
-
+Do not make the container privileged only to resolve this warning. For DNS infrastructure, the Proxmox host should manage system time.
 ## Verify Pi-hole is using Unbound
 
 From a client machine, query Pi-hole:
