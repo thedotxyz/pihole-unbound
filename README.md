@@ -619,10 +619,10 @@ Expected result:
 
 ## Point Pi-hole to Unbound
 
-Open the Pi-hole admin UI:
+Open the Pi-hole admin UI (Replace `PIHOLE_IP` with the actual IP address of your Pi-hole system):
 
 ```text
-http://PIHOLE-IP/admin
+http://PIHOLE_IP/admin
 ```
 
 Go to:
@@ -686,7 +686,7 @@ Do not make the container privileged only to resolve this warning. For DNS infra
 From a client machine, query Pi-hole:
 
 ```bash
-dig pi-hole.net @PIHOLE-IP
+dig pi-hole.net @PIHOLE_IP
 ```
 
 On the Pi-hole host/container, verify queries in the live log:
@@ -725,7 +725,7 @@ Test Pi-hole:
 
 ```bash
 dig pi-hole.net @127.0.0.1
-dig pi-hole.net @PIHOLE-IP
+dig pi-hole.net @PIHOLE_IP
 ```
 
 Check live Pi-hole queries:
@@ -842,13 +842,13 @@ Optional: use SSH keys and disable password authentication.
 First copy your SSH key to the administrative user:
 
 ```bash
-ssh-copy-id piholeadmin@PIHOLE-IP
+ssh-copy-id piholeadmin@PIHOLE_IP
 ```
 
 Validate key-based login from a new terminal:
 
 ```bash
-ssh piholeadmin@PIHOLE-IP
+ssh piholeadmin@PIHOLE_IP
 ```
 
 Only after validating SSH key login, disable password authentication:
@@ -1044,15 +1044,15 @@ Do not allow inbound access to Unbound port `5335`.
 Example rule model:
 
 ```text
-ALLOW  tcp  <ADMIN-NETWORK>  -> PIHOLE-IP  port 22
-ALLOW  tcp  <ADMIN-NETWORK>  -> PIHOLE-IP  port 80
-ALLOW  tcp  <ADMIN-NETWORK>  -> PIHOLE-IP  port 443
-ALLOW  udp  <LAN-NETWORK>    -> PIHOLE-IP  port 53
-ALLOW  tcp  <LAN-NETWORK>    -> PIHOLE-IP  port 53
-DROP   all  any              -> PIHOLE-IP
+ALLOW  tcp  <ADMIN-NETWORK>  -> PIHOLE_IP  port 22
+ALLOW  tcp  <ADMIN-NETWORK>  -> PIHOLE_IP  port 80
+ALLOW  tcp  <ADMIN-NETWORK>  -> PIHOLE_IP  port 443
+ALLOW  udp  <LAN-NETWORK>    -> PIHOLE_IP  port 53
+ALLOW  tcp  <LAN-NETWORK>    -> PIHOLE_IP  port 53
+DROP   all  any              -> PIHOLE_IP
 ```
 
-Adjust `<ADMIN-NETWORK>`, `<LAN-NETWORK>` and `PIHOLE-IP` to match your environment.
+Adjust `<ADMIN-NETWORK>`, `<LAN-NETWORK>` and `PIHOLE_IP` to match your environment.
 
 ## Raspberry Pi-specific hardening
 
@@ -1265,7 +1265,7 @@ Validate DNS resolution through Pi-hole:
 
 ```bash
 dig pi-hole.net @127.0.0.1
-dig pi-hole.net @PIHOLE-IP
+dig pi-hole.net @PIHOLE_IP
 ```
 
 Validate Unbound directly:
@@ -1361,7 +1361,7 @@ sudo ss -tulpn | grep 5335
 Check DNS through Pi-hole:
 
 ```bash
-dig pi-hole.net @PIHOLE-IP
+dig pi-hole.net @PIHOLE_IP
 ```
 
 Check Unbound directly:
