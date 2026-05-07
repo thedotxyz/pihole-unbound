@@ -628,6 +628,7 @@ sudo systemctl restart pihole-FTL
 ```
 
 Do not make the container privileged only to resolve this warning. For DNS infrastructure, the Proxmox host should manage system time.
+
 ## Verify Pi-hole is using Unbound
 
 From a client machine, query Pi-hole:
@@ -643,6 +644,43 @@ sudo pihole tail
 ```
 
 You should see client queries arriving at Pi-hole. Pi-hole should forward allowed domains to Unbound on `127.0.0.1#5335`.
+
+## Quick validation
+
+Run these commands after completing the installation.
+
+Test Unbound directly:
+
+```bash
+dig pi-hole.net @127.0.0.1 -p 5335
+```
+
+Test DNSSEC through Unbound:
+
+```bash
+dig fail01.dnssec.works @127.0.0.1 -p 5335
+dig +ad dnssec.works @127.0.0.1 -p 5335
+```
+
+Expected result:
+
+```text
+fail01.dnssec.works -> SERVFAIL
+dnssec.works        -> NOERROR with ad flag
+```
+
+Test Pi-hole:
+
+```bash
+dig pi-hole.net @127.0.0.1
+dig pi-hole.net @<PIHOLE-IP>
+```
+
+Check live Pi-hole queries:
+
+```bash
+sudo pihole tail
+```
 
 ## Security hardening
 
@@ -1308,5 +1346,5 @@ journalctl -u ssh -n 100 --no-pager
 ## Sources
 - Pi-hole documentation: https://docs.pi-hole.net/
 - Pi-hole Unbound guide: https://docs.pi-hole.net/guides/dns/unbound/
-- InterNIC root hints: https://www.internic.net/domain/named.root
+- InterNIC root hints: https://www.internic.net/domain/named.root — only needed when manually managing Unbound root hints
 - Unbound documentation: https://unbound.docs.nlnetlabs.nl/
