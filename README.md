@@ -383,7 +383,13 @@ If the issue persists, make sure your SSH client uses UTF-8 encoding and an `xte
 Download the official Pi-hole installer:
 
 ```bash
-curl -sSL https://install.pi-hole.net -o /tmp/pihole-install.sh
+curl -fsSL https://install.pi-hole.net -o /tmp/pihole-install.sh
+```
+Validate that the installer was downloaded:
+
+```bash
+ls -lh /tmp/pihole-install.sh
+head -n 5 /tmp/pihole-install.sh
 ```
 ### (Optional) Fix terminal line drawing issues
 
