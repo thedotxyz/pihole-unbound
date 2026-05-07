@@ -1,4 +1,4 @@
-# Setup Pi-hole and Unbound on a Raspberry Pi
+# Setup Pi-hole and Unbound in Proxmox LXC Container or on Raspberry Pi
 Lightweight setup for running Pi-hole with Unbound as a local recursive DNS resolver.
 
 This setup is designed for:
