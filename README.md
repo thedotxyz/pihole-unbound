@@ -1,16 +1,28 @@
-# Setup Pi-hole and Unbound in Proxmox LXC Container or on Raspberry Pi
-Lightweight setup for running Pi-hole with Unbound as a local recursive DNS resolver.
+# Pi-hole + Unbound Recursive DNS
 
-This setup is designed for:
-- Proxmox VE with a Debian LXC container
+<p align="center">
+  <img src="https://img.shields.io/badge/Pi--hole-DNS%20sinkhole-96060C?style=for-the-badge&logo=pi-hole&logoColor=white" alt="Pi-hole">
+  <img src="https://img.shields.io/badge/Unbound-Recursive%20DNS-005A9C?style=for-the-badge" alt="Unbound">
+  <img src="https://img.shields.io/badge/Proxmox-LXC-E57000?style=for-the-badge&logo=proxmox&logoColor=white" alt="Proxmox LXC">
+  <img src="https://img.shields.io/badge/Debian-12%20%7C%2013-A81D33?style=for-the-badge&logo=debian&logoColor=white" alt="Debian">
+  <img src="https://img.shields.io/badge/Raspberry%20Pi-supported-A22846?style=for-the-badge&logo=raspberrypi&logoColor=white" alt="Raspberry Pi">
+</p>
+
+Lightweight setup for running **Pi-hole** with **Unbound** as a local recursive DNS resolver.
+
+This guide supports:
+
+- Proxmox VE with an unprivileged Debian LXC container
 - Debian 12 Bookworm
 - Debian 13 Trixie
 - Raspberry Pi OS / Debian-based systems
-  
-PiHole Unbound: https://docs.pi-hole.net/guides/dns/unbound/ </br>
-DNS Sec: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
 
-## Target Architecture
+## What this setup does
+
+Pi-hole provides DNS filtering, blocklists and the web interface.
+
+Unbound provides local recursive DNS resolution and DNSSEC validation.
+
 The target architecture is:
 
 ```text
@@ -28,6 +40,13 @@ Unbound
    v
 Root / TLD / authoritative DNS servers
 ```
+## Key references
+
+- Pi-hole documentation: https://docs.pi-hole.net/
+- Pi-hole Unbound guide: https://docs.pi-hole.net/guides/dns/unbound/
+- DNSSEC overview: https://www.icann.org/resources/pages/dnssec-what-is-it-why-important-2019-03-05-en
+- Unbound documentation: https://unbound.docs.nlnetlabs.nl/
+
 ## Recommended platform
 For Proxmox, use:
 
