@@ -7,7 +7,7 @@
 [![Raspberry Pi](https://img.shields.io/badge/Raspberry%20Pi-supported-A22846?style=for-the-badge&logo=raspberrypi&logoColor=white)](https://www.raspberrypi.com)
 
 Lightweight setup for running **Pi-hole** with **Unbound** as a local recursive DNS resolver.
-
+ 
 This guide supports:
 
 - Proxmox VE with an unprivileged Debian LXC container
